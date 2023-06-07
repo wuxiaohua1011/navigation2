@@ -32,15 +32,16 @@
 #include "smac_planner/types.hpp"
 #include "smac_planner/constants.hpp"
 
+#include <rclcpp/logger.hpp>
+#include <rclcpp/logging.hpp>
+
 namespace smac_planner
 {
 
-inline double squaredDistance(
-  const Eigen::Vector2d & p1,
-  const Eigen::Vector2d & p2)
+inline double squaredDistance(const Eigen::Vector2d& p1, const Eigen::Vector2d& p2)
 {
-  const double & dx = p1[0] - p2[0];
-  const double & dy = p1[1] - p2[1];
+  const double& dx = p1[0] - p2[0];
+  const double& dy = p1[1] - p2[1];
   return hypot(dx, dy);
 }
 
@@ -48,18 +49,18 @@ inline double squaredDistance(
  * @class smac_planner::AStarAlgorithm
  * @brief An A* implementation for planning in a costmap. Templated based on the Node type.
  */
-template<typename NodeT>
+template <typename NodeT>
 class AStarAlgorithm
 {
 public:
-  typedef NodeT * NodePtr;
+  typedef NodeT* NodePtr;
   typedef std::unordered_map<unsigned int, NodeT> Graph;
   typedef std::vector<NodePtr> NodeVector;
   typedef std::pair<float, NodeBasic<NodeT>> NodeElement;
   typedef typename NodeT::Coordinates Coordinates;
   typedef typename NodeT::CoordinateVector CoordinateVector;
   typedef typename NodeVector::iterator NeighborIterator;
-  typedef std::function<bool (const unsigned int &, NodeT * &)> NodeGetter;
+  typedef std::function<bool(const unsigned int&, NodeT*&)> NodeGetter;
 
   /**
    * @struct smac_planner::NodeComparator
@@ -67,7 +68,7 @@ public:
    */
   struct NodeComparator
   {
-    bool operator()(const NodeElement & a, const NodeElement & b) const
+    bool operator()(const NodeElement& a, const NodeElement& b) const
     {
       return a.first > b.first;
     }
@@ -79,7 +80,7 @@ public:
    * @brief A constructor for smac_planner::PlannerServer
    * @param neighborhood The type of neighborhood to use for search (4 or 8 connected)
    */
-  explicit AStarAlgorithm(const MotionModel & motion_model, const SearchInfo & search_info);
+  explicit AStarAlgorithm(const MotionModel& motion_model, const SearchInfo& search_info);
 
   /**
    * @brief A destructor for smac_planner::AStarAlgorithm
@@ -94,10 +95,7 @@ public:
    * path once within thresholds to refine path
    * comes at more compute time but smoother paths.
    */
-  void initialize(
-    const bool & allow_unknown,
-    int & max_iterations,
-    const int & max_on_approach_iterations);
+  void initialize(const bool& allow_unknown, int& max_iterations, const int& max_on_approach_iterations);
 
   /**
    * @brief Creating path from given costmap, start, and goal
@@ -106,7 +104,7 @@ public:
    * @param tolerance Reference to tolerance in costmap nodes
    * @return if plan was successful
    */
-  bool createPath(CoordinateVector & path, int & num_iterations, const float & tolerance);
+  bool createPath(CoordinateVector& path, int& num_iterations, const float& tolerance);
 
   /**
    * @brief Create the graph based on the node type. For 2D nodes, a cost grid.
@@ -116,11 +114,8 @@ public:
    * @param dim_3 The total number of nodes in the theta or Z direction
    * @param costmap Costmap to convert into the graph
    */
-  void createGraph(
-    const unsigned int & x,
-    const unsigned int & y,
-    const unsigned int & dim_3,
-    nav2_costmap_2d::Costmap2D * & costmap);
+  void createGraph(const unsigned int& x, const unsigned int& y, const unsigned int& dim_3,
+                   nav2_costmap_2d::Costmap2D*& costmap);
 
   /**
    * @brief Set the goal for planning, as a node index
@@ -128,10 +123,7 @@ public:
    * @param my The node Y index of the goal
    * @param dim_3 The node dim_3 index of the goal
    */
-  void setGoal(
-    const unsigned int & mx,
-    const unsigned int & my,
-    const unsigned int & dim_3);
+  void setGoal(const unsigned int& mx, const unsigned int& my, const unsigned int& dim_3);
 
   /**
    * @brief Set the starting pose for planning, as a node index
@@ -139,10 +131,7 @@ public:
    * @param my The node Y index of the goal
    * @param dim_3 The node dim_3 index of the goal
    */
-  void setStart(
-    const unsigned int & mx,
-    const unsigned int & my,
-    const unsigned int & dim_3);
+  void setStart(const unsigned int& mx, const unsigned int& my, const unsigned int& dim_3);
 
   /**
    * @brief Set the footprint
@@ -150,6 +139,7 @@ public:
    * @param use_radius Whether this footprint is a circle with radius
    */
   void setFootprint(nav2_costmap_2d::Footprint footprint, bool use_radius);
+  void setFootprint(bool use_radius);
 
   /**
    * @brief Perform an analytic path expansion to the goal
@@ -157,7 +147,7 @@ public:
    * @param getter The function object that gets valid nodes from the graph
    * @return Node pointer to goal node if successful, else return nullptr
    */
-  NodePtr getAnalyticPath(const NodePtr & node, const NodeGetter & getter);
+  NodePtr getAnalyticPath(const NodePtr& node, const NodeGetter& getter);
 
   /**
    * @brief Set the starting pose for planning, as a node index
@@ -165,55 +155,55 @@ public:
    * @param path Reference to a vector of indicies of generated path
    * @return whether the path was able to be backtraced
    */
-  bool backtracePath(NodePtr & node, CoordinateVector & path);
+  bool backtracePath(NodePtr& node, CoordinateVector& path);
 
   /**
    * @brief Get maximum number of iterations to plan
    * @return Reference to Maximum iterations parameter
    */
-  int & getMaxIterations();
+  int& getMaxIterations();
 
   /**
    * @brief Get pointer reference to starting node
    * @return Node pointer reference to starting node
    */
-  NodePtr & getStart();
+  NodePtr& getStart();
 
   /**
    * @brief Get pointer reference to goal node
    * @return Node pointer reference to goal node
    */
-  NodePtr & getGoal();
+  NodePtr& getGoal();
 
   /**
    * @brief Get maximum number of on-approach iterations after within threshold
    * @return Reference to Maximum on-appraoch iterations parameter
    */
-  int & getOnApproachMaxIterations();
+  int& getOnApproachMaxIterations();
 
   /**
    * @brief Get tolerance, in node nodes
    * @return Reference to tolerance parameter
    */
-  float & getToleranceHeuristic();
+  float& getToleranceHeuristic();
 
   /**
    * @brief Get size of graph in X
    * @return Size in X
    */
-  unsigned int & getSizeX();
+  unsigned int& getSizeX();
 
   /**
    * @brief Get size of graph in Y
    * @return Size in Y
    */
-  unsigned int & getSizeY();
+  unsigned int& getSizeY();
 
   /**
    * @brief Get number of angle quantization bins (SE2) or Z coordinate  (XYZ)
    * @return Number of angle bins / Z dimension
    */
-  unsigned int & getSizeDim3();
+  unsigned int& getSizeDim3();
 
 protected:
   /**
@@ -227,21 +217,21 @@ protected:
    * @param cost The cost to sort into the open set of the node
    * @param node Node pointer reference to add to open set
    */
-  inline void addNode(const float cost, NodePtr & node);
+  inline void addNode(const float cost, NodePtr& node);
 
   /**
    * @brief Adds node to graph
    * @param cost The cost to sort into the open set of the node
    * @param node Node pointer reference to add to open set
    */
-  inline NodePtr addToGraph(const unsigned int & index);
+  inline NodePtr addToGraph(const unsigned int& index);
 
   /**
    * @brief Check if this node is the goal node
    * @param node Node pointer to check if its the goal node
    * @return if node is goal
    */
-  inline bool isGoal(NodePtr & node);
+  inline bool isGoal(NodePtr& node);
 
   /**
    * @brief Get cost of traversal between nodes
@@ -249,14 +239,14 @@ protected:
    * @param new_node Pointer to new node
    * @return Reference traversal cost between the nodes
    */
-  inline float getTraversalCost(NodePtr & current_node, NodePtr & new_node);
+  inline float getTraversalCost(NodePtr& current_node, NodePtr& new_node);
 
   /**
    * @brief Get total cost of traversal for a node
    * @param node Pointer to current node
    * @return Reference accumulated cost between the nodes
    */
-  inline float & getAccumulatedCost(NodePtr & node);
+  inline float& getAccumulatedCost(NodePtr& node);
 
   /**
    * @brief Get cost of heuristic of node
@@ -264,7 +254,7 @@ protected:
    * @param node Node index of new
    * @return Heuristic cost between the nodes
    */
-  inline float getHeuristicCost(const NodePtr & node);
+  inline float getHeuristicCost(const NodePtr& node);
 
   /**
    * @brief Check if inputs to planner are valid
@@ -287,9 +277,8 @@ protected:
    * @return Node pointer reference to goal node if successful, else
    * return nullptr
    */
-  inline NodePtr tryAnalyticExpansion(
-    const NodePtr & current_node,
-    const NodeGetter & getter, int & iterations, int & best_cost);
+  inline NodePtr tryAnalyticExpansion(const NodePtr& current_node, const NodeGetter& getter, int& iterations,
+                                      int& best_cost);
 
   bool _traverse_unknown;
   int _max_iterations;
@@ -313,7 +302,8 @@ protected:
   GridCollisionChecker _collision_checker;
   nav2_costmap_2d::Footprint _footprint;
   bool _is_radius_footprint;
-  nav2_costmap_2d::Costmap2D * _costmap;
+  nav2_costmap_2d::Costmap2D* _costmap;
+  rclcpp::Logger _logger{ rclcpp::get_logger("nav2_astar") };
 };
 
 }  // namespace smac_planner

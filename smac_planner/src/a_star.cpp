@@ -113,6 +113,13 @@ void AStarAlgorithm<NodeT>::setFootprint(nav2_costmap_2d::Footprint footprint, b
   _is_radius_footprint = use_radius;
 }
 
+template <typename NodeT>
+void AStarAlgorithm<NodeT>::setFootprint(bool use_radius)
+{
+  // _footprint = footprint;
+  _is_radius_footprint = use_radius;
+}
+
 template <>
 typename AStarAlgorithm<Node2D>::NodePtr AStarAlgorithm<Node2D>::addToGraph(const unsigned int& index)
 {
@@ -179,18 +186,20 @@ bool AStarAlgorithm<NodeT>::areInputsValid()
   {
     throw std::runtime_error("Failed to compute path, no valid start or goal given.");
   }
+  // RCLCPP_INFO(_logger, "Checking goal...");
 
   // Check if ending point is valid
   if (getToleranceHeuristic() < 0.001 && !_goal->isNodeValid(_traverse_unknown, _collision_checker))
   {
     throw std::runtime_error("Failed to compute path, goal is occupied with no tolerance.");
   }
+  // RCLCPP_INFO(_logger, "Checking starting...");
 
-  // // Check if starting point is valid
-  // if (!_start->isNodeValid(_traverse_unknown, _collision_checker))
-  // {
-  //   throw std::runtime_error("Starting point in lethal space! Cannot create feasible plan.");
-  // }
+  // Check if starting point is valid
+  if (!_start->isNodeValid(_traverse_unknown, _collision_checker))
+  {
+    throw std::runtime_error("Starting point in lethal space! Cannot create feasible plan.");
+  }
 
   return true;
 }
@@ -201,7 +210,6 @@ bool AStarAlgorithm<NodeT>::createPath(CoordinateVector& path, int& iterations, 
   _tolerance = tolerance * NodeT::neutral_cost;
   _best_heuristic_node = { std::numeric_limits<float>::max(), 0 };
   clearQueue();
-
   if (!areInputsValid())
   {
     return false;
